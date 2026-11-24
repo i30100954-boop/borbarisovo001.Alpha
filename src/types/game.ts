@@ -317,6 +317,18 @@ export interface InteractableZone {
   disabledReason?: string;
 }
 
+export interface BossVictoryStats {
+  fighter: FighterId;
+  minion: MinionId;
+  bossId: 'DIMA' | 'WILD_CUCUMBER';
+  hardcore: boolean;
+  maxCombo: number;
+  remainingHp: number;
+  maxHp: number;
+  damageTaken: number;
+  dodgeEvades: number;
+}
+
 export interface GameProgress {
   hardcore: boolean;
   egorJoined: boolean;
@@ -330,8 +342,14 @@ export interface GameProgress {
   money: number; // в копейках
   hasKhrumki: boolean;
   hasGazyava: boolean;
+  boughtBundle: boolean;
   qteAttempts: number;
   qteBestAccuracy: number;
+  bestCombo: number;
+  bestDodgeEvades: number;
+  noDamageBossWin: boolean;
+  clutchBossWin: boolean;
+  lastBossStats: BossVictoryStats | null;
 }
 
 export const PRICES = {

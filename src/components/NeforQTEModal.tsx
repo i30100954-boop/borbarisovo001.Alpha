@@ -38,7 +38,7 @@ const MAX_MISSES = 3;
 
 interface NeforQTEModalProps {
   hardcore: boolean;
-  onSuccess: (accuracy: number) => void;
+  onSuccess: (accuracy: number, attempts: number) => void;
   onCancel: () => void;
   onBackToMenu?: () => void;
 }
@@ -51,6 +51,7 @@ export function NeforQTEModal({ hardcore, onSuccess, onCancel, onBackToMenu }: N
   const [stepIndex, setStepIndex] = useState(0);
   const [hits, setHits] = useState(0);
   const [misses, setMisses] = useState(0);
+  const [attempts, setAttempts] = useState(1);
   const [timeLeftMs, setTimeLeftMs] = useState(roundDurationMs);
   const [feedback, setFeedback] = useState<{ type: 'hit' | 'miss'; text: string } | null>(null);
   const [status, setStatus] = useState<'ACTIVE' | 'WON' | 'LOST'>('ACTIVE');
@@ -172,6 +173,7 @@ export function NeforQTEModal({ hardcore, onSuccess, onCancel, onBackToMenu }: N
     setStepIndex(0);
     setHits(0);
     setMisses(0);
+    setAttempts((prev) => prev + 1);
     setTimeLeftMs(roundDurationMs);
     setFeedback(null);
     setStatus('ACTIVE');
@@ -367,7 +369,7 @@ export function NeforQTEModal({ hardcore, onSuccess, onCancel, onBackToMenu }: N
             </p>
             <button
               type="button"
-              onClick={() => onSuccess(accuracy)}
+              onClick={() => onSuccess(accuracy, attempts)}
               className="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-bold text-sm transition-colors whitespace-nowrap shrink-0"
             >
               Забрать 300 коп. и идти в магаз

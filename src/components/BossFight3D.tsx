@@ -6,6 +6,7 @@ import { Bird, Crosshair, Flame, Footprints, Heart, Home, Radar, RotateCcw, Shie
 import { soundFX } from '../audio/soundFx';
 import {
   ASSETS,
+  BossVictoryStats,
   FighterId,
   GameProgress,
   MinionId,
@@ -26,7 +27,7 @@ interface BossFight3DProps {
   isBossRush?: boolean;
   trainingTarget?: TrainingStartTarget | null;
   bossId?: 'DIMA' | 'WILD_CUCUMBER';
-  onVictory: () => void;
+  onVictory: (stats?: BossVictoryStats) => void;
   onChangeFighter: () => void;
   onBackToMenu?: () => void;
   onChangeTrainingPhase?: (target: TrainingStartTarget) => void;
@@ -137,6 +138,8 @@ interface CombatHudState {
   dimaSpinWireActive: boolean;
   comboCount: number;
   maxComboCount: number;
+  damageTakenTotal: number;
+  dodgeEvadeCount: number;
   comboPulse: boolean;
   pointerLocked: boolean;
   impaleCutsceneActive: boolean;
@@ -462,6 +465,8 @@ export function BossFight3D({
     dimaSpinWireActive: false,
     comboCount: 0,
     maxComboCount: 0,
+    damageTakenTotal: 0,
+    dodgeEvadeCount: 0,
     comboPulse: false,
     pointerLocked: false,
     impaleCutsceneActive: false,
@@ -604,6 +609,8 @@ export function BossFight3D({
       dimaSpinWireActive: false,
       comboCount: 0,
       maxComboCount: 0,
+      damageTakenTotal: 0,
+      dodgeEvadeCount: 0,
       comboPulse: false,
       pointerLocked: false,
       impaleCutsceneActive: false,
@@ -4155,6 +4162,8 @@ export function BossFight3D({
       lupikKnifeHitDone: false,
       comboCount: 0,
       maxComboCount: 0,
+      damageTakenTotal: 0,
+      dodgeEvadeCount: 0,
       comboPulseTimer: 0,
       dimaStaggerTimer: 0,
       dimaStaggerDuration: 0.36,
@@ -5376,6 +5385,7 @@ export function BossFight3D({
       if (state.dodgeIframeTimer > 0) {
         if (!state.dodgeEvadeTriggered) {
           state.dodgeEvadeTriggered = true;
+          state.dodgeEvadeCount += 1;
           soundFX.playDodgeEvade();
           setBanner(`УКЛОНЕНИЕ! Атака ${bossGenitiveName} прошла сквозь тебя (IFRAME 150 мс)!`, 1.4);
         }
@@ -5385,6 +5395,7 @@ export function BossFight3D({
         state.artemArmorLeft > 0 ? Math.max(1, Math.round(amount * 0.4)) : amount;
       const hadCombo = state.comboCount > 0;
       state.playerHp = Math.max(0, state.playerHp - effectiveAmount);
+      state.damageTakenTotal += effectiveAmount;
       state.comboCount = 0;
       if (hadCombo) {
         soundFX.playComboBreak();
@@ -9436,6 +9447,8 @@ export function BossFight3D({
           dimaSpinWireActive: state.dimaSpinWirePhase !== 'NONE',
           comboCount: state.comboCount,
           maxComboCount: state.maxComboCount,
+          damageTakenTotal: state.damageTakenTotal,
+          dodgeEvadeCount: state.dodgeEvadeCount,
           comboPulse: state.comboPulseTimer > 0,
           pointerLocked: state.pointerLocked,
           impaleCutsceneActive: state.wildSkewerPhase === 'IMPALE_CUTSCENE',
@@ -10667,7 +10680,19 @@ export function BossFight3D({
                   )}
                   <button
                     type="button"
-                    onClick={onVictory}
+                    onClick={() =>
+                      onVictory({
+                        fighter,
+                        minion,
+                        bossId,
+                        hardcore: isHardcore,
+                        maxCombo: hud.maxComboCount,
+                        remainingHp: hud.playerHp,
+                        maxHp: hud.maxPlayerHp,
+                        damageTaken: hud.damageTakenTotal,
+                        dodgeEvades: hud.dodgeEvadeCount,
+                      })
+                    }
                     className="flex-1 py-3 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-bold text-sm transition-colors whitespace-nowrap"
                   >
                     {isTraining

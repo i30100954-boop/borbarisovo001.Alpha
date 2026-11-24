@@ -15,6 +15,7 @@ import { WorldCanvas } from './components/WorldCanvas';
 import { useMultiplayerClient } from './network/useMultiplayerClient';
 import {
   ASSETS,
+  BossVictoryStats,
   DialogueSequence,
   DialogueSpeaker,
   FighterId,
@@ -71,8 +72,14 @@ const INITIAL_PROGRESS: GameProgress = {
   money: 0,
   hasKhrumki: false,
   hasGazyava: false,
+  boughtBundle: false,
   qteAttempts: 0,
   qteBestAccuracy: 0,
+  bestCombo: 0,
+  bestDodgeEvades: 0,
+  noDamageBossWin: false,
+  clutchBossWin: false,
+  lastBossStats: null,
   hardcore: false,
 };
 
@@ -660,12 +667,12 @@ export default function App() {
     }
   }, [dialogue, dialogueLine]);
 
-  const handleQteSuccess = (accuracy: number) => {
+  const handleQteSuccess = (accuracy: number, attempts = 1) => {
     setProgress((prev) => ({
       ...prev,
       neforDefeated: true,
       money: prev.money + PRICES.NEFOR_REWARD,
-      qteAttempts: prev.qteAttempts + 1,
+      qteAttempts: prev.qteAttempts + attempts,
       qteBestAccuracy: Math.max(prev.qteBestAccuracy, accuracy),
     }));
     showMoneyDelta(PRICES.NEFOR_REWARD);
@@ -713,6 +720,7 @@ export default function App() {
       ...prev,
       hasKhrumki: true,
       hasGazyava: true,
+      boughtBundle: true,
       money: prev.money - total,
     }));
     showMoneyDelta(-total);
@@ -738,12 +746,19 @@ export default function App() {
     }
   };
 
-  const handleBossVictory = () => {
-    if (activeBossId === 'WILD_CUCUMBER') {
-      setProgress((prev) => ({ ...prev, wildCucumberDefeated: true }));
-    } else {
-      setProgress((prev) => ({ ...prev, dimaDefeated: true }));
-    }
+  const handleBossVictory = (stats?: BossVictoryStats) => {
+    setProgress((prev) => ({
+      ...prev,
+      ...(activeBossId === 'WILD_CUCUMBER'
+        ? { wildCucumberDefeated: true }
+        : { dimaDefeated: true }),
+      bestCombo: Math.max(prev.bestCombo, stats?.maxCombo ?? 0),
+      bestDodgeEvades: Math.max(prev.bestDodgeEvades, stats?.dodgeEvades ?? 0),
+      noDamageBossWin: prev.noDamageBossWin || Boolean(stats && stats.damageTaken === 0),
+      clutchBossWin:
+        prev.clutchBossWin || Boolean(stats && stats.remainingHp > 0 && stats.remainingHp <= 20),
+      lastBossStats: stats ?? prev.lastBossStats,
+    }));
     if (bossRushMode || trainingConfig) {
       soundFX.playVictory();
       setScreen('VICTORY');
@@ -845,7 +860,16 @@ export default function App() {
           }
         }}
         onBossRushAgain={() => {
-          setProgress((prev) => ({ ...prev, dimaDefeated: false, wildCucumberDefeated: false }));
+          setProgress((prev) => ({
+            ...prev,
+            dimaDefeated: false,
+            wildCucumberDefeated: false,
+            bestCombo: 0,
+            bestDodgeEvades: 0,
+            noDamageBossWin: false,
+            clutchBossWin: false,
+            lastBossStats: null,
+          }));
           setScreen(isTraining ? 'TRAINING_SETUP' : 'FIGHTER_SELECT');
         }}
         onBackToMenu={() => {
