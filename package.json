@@ -1,15 +1,19 @@
 {
-  "name": "react-example",
+  "name": "borbarisovo-001",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "start": "node server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "electron:start": "vite build && electron .",
+    "build:exe": "vite build && electron-builder --win",
+    "build:exe:portable": "vite build && electron-builder --win portable"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -27,14 +31,57 @@
     "ws": "^8.23.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
-    "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "typescript": "^7.0.2"
+  },
+  "build": {
+    "appId": "com.borbarisovo001.winter",
+    "productName": "Borbarisovo 001",
+    "directories": {
+      "output": "release"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "dist/assets/**/*",
+      "dist/src/assets/**/*"
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Borbarisovo-001-Portable.exe"
+    },
+    "nsis": {
+      "artifactName": "Borbarisovo-001-Setup.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
